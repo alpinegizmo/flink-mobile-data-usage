@@ -1,0 +1,118 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'application'
+    // shadow plugin to produce fat JARs
+    id 'com.github.johnrengelman.shadow' version '7.0.0' apply false
+    id "com.diffplug.spotless" version "5.14.2" apply false
+}
+
+allprojects {
+    apply plugin: 'com.diffplug.spotless'
+
+    spotless {
+        format 'misc', {
+            // define the files to apply `misc` to
+            target '*.gradle', '*.md', '.gitignore'
+
+            // define the steps to apply to those files
+            trimTrailingWhitespace()
+            indentWithSpaces(4)
+            endWithNewline()
+        }
+    }
+}
+
+// artifact properties
+group = 'com.ververica'
+version = '0.1-SNAPSHOT'
+mainClassName = 'com.ververica.flink.example.datausage.TotalUsageStreamingJob'
+description = """Demo for Flink Forward Global 2021"""
+
+apply plugin: 'java'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+ext {
+    javaVersion = '1.8'
+    flinkVersion = '1.14.0'
+    scalaBinaryVersion = '2.12'
+    jacksonVersion = '2.11.2'
+    log4jVersion = '2.12.1'
+    junitVersion = '4.13'
+}
+
+
+sourceCompatibility = javaVersion
+targetCompatibility = javaVersion
+tasks.withType(JavaCompile) {
+	options.encoding = 'UTF-8'
+}
+
+
+// declare where to find the dependencies of your project
+repositories {
+    // for access from China, you may need to uncomment this line
+    // maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+
+dependencies {
+    shadow "org.apache.logging.log4j:log4j-slf4j-impl:${log4jVersion}"
+    shadow "org.apache.logging.log4j:log4j-api:${log4jVersion}"
+    shadow "org.apache.logging.log4j:log4j-core:${log4jVersion}"
+
+    shadow "org.apache.flink:flink-clients_${scalaBinaryVersion}:${flinkVersion}"
+    shadow "org.apache.flink:flink-java:${flinkVersion}"
+    shadow "org.apache.flink:flink-streaming-java_${scalaBinaryVersion}:${flinkVersion}"
+    shadow "org.apache.flink:flink-streaming-scala_${scalaBinaryVersion}:${flinkVersion}"
+
+    shadow "org.apache.flink:flink-runtime-web_${scalaBinaryVersion}:${flinkVersion}"
+    shadow "org.apache.flink:flink-table-planner_${scalaBinaryVersion}:${flinkVersion}"
+    shadow "org.apache.flink:flink-table-common:${flinkVersion}"
+    shadow "org.apache.flink:flink-table-api-java-bridge_${scalaBinaryVersion}:${flinkVersion}"
+    shadow "org.apache.flink:flink-connector-kafka_${scalaBinaryVersion}:${flinkVersion}"
+
+    implementation "com.github.knaufk:flink-faker:0.3.0"
+
+    api "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    api "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
+}
+
+
+shadowJar {
+    mergeServiceFiles()
+    dependencies {
+        exclude(dependency("org.apache.flink:force-shading"))
+        exclude(dependency('com.google.code.findbugs:jsr305'))
+        exclude(dependency('org.slf4j:.*'))
+        exclude(dependency('log4j:.*'))
+        exclude(dependency('org.apache.logging.log4j:log4j-to-slf4j'))
+        // already provided dependencies from serializer frameworks
+        exclude(dependency('com.esotericsoftware.kryo:kryo'))
+    }
+}
+
+assemble.dependsOn(shadowJar)
+
+// make compileOnly dependencies available for tests:
+sourceSets {
+    main.compileClasspath += configurations.shadow
+    main.runtimeClasspath += configurations.shadow
+
+    test.compileClasspath += configurations.shadow
+    test.runtimeClasspath += configurations.shadow
+
+    javadoc.classpath += configurations.shadow
+}
+
+run.classpath = sourceSets.main.runtimeClasspath
+
+jar {
+    manifest {
+        attributes 'Built-By': System.getProperty('user.name'),
+                'Build-Jdk': System.getProperty('java.version')
+    }
+}
