@@ -32,6 +32,8 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import com.ververica.flink.example.datausage.records.UsageRecord;
 import com.ververica.flink.example.datausage.records.UsageRecordDeserializationSchema;
 
+import java.time.Instant;
+
 import static org.apache.flink.table.api.Expressions.$;
 
 public class TotalUsageBatchJob {
@@ -53,8 +55,12 @@ public class TotalUsageBatchJob {
                 KafkaSource.<UsageRecord>builder()
                         .setBootstrapServers(brokers)
                         .setTopics(topic)
-                        .setStartingOffsets(OffsetsInitializer.earliest())
-                        .setBounded(OffsetsInitializer.latest())
+                        .setStartingOffsets(
+                                OffsetsInitializer.timestamp(
+                                        Instant.parse("2021-10-01T00:00:00.000Z").toEpochMilli()))
+                        .setBounded(
+                                OffsetsInitializer.timestamp(
+                                        Instant.parse("2021-10-31T23:59:59.999Z").toEpochMilli()))
                         .setValueOnlyDeserializer(new UsageRecordDeserializationSchema())
                         .build();
 
