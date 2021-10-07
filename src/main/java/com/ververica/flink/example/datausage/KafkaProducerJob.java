@@ -28,16 +28,17 @@ public class KafkaProducerJob {
         kafkaProps.put("transaction.timeout.ms", 600000);
 
         KafkaSink<UsageRecord> sink =
-            KafkaSink.<UsageRecord>builder()
-                .setBootstrapServers(brokers)
-                .setKafkaProducerConfig(kafkaProps)
-                .setRecordSerializer(
-                    KafkaRecordSerializationSchema.builder()
-                        .setTopic(topic)
-                        .setValueSerializationSchema(new UsageRecordSerializationSchema())
-                        .build())
-                .setDeliverGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
-                .build();
+                KafkaSink.<UsageRecord>builder()
+                        .setBootstrapServers(brokers)
+                        .setKafkaProducerConfig(kafkaProps)
+                        .setRecordSerializer(
+                                KafkaRecordSerializationSchema.builder()
+                                        .setTopic(topic)
+                                        .setValueSerializationSchema(
+                                                new UsageRecordSerializationSchema())
+                                        .build())
+                        .setDeliverGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+                        .build();
 
         env.addSource(new UsageRecordGenerator()).sinkTo(sink);
 

@@ -12,10 +12,8 @@ import java.io.IOException;
 public class UsageRecordDeserializationSchema implements DeserializationSchema<UsageRecord> {
     private static final long serialVersionUID = 1L;
 
-    private static final ObjectMapper objectMapper = JsonMapper
-            .builder()
-            .build()
-            .registerModule(new JavaTimeModule());
+    private static final ObjectMapper objectMapper =
+            JsonMapper.builder().build().registerModule(new JavaTimeModule());
 
     @Override
     public UsageRecord deserialize(byte[] message) throws IOException {

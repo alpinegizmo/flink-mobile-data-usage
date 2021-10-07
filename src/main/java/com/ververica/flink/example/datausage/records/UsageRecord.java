@@ -7,14 +7,17 @@ import java.util.Objects;
 
 /**
  * This class is set up as a Flink POJO so that it can be serialized by Flink's PojoSerializer.
- * That's why there is an empty, default constructor, and the fields are public
- * (though we could have implemented getters and setters instead).
+ * That's why there is an empty, default constructor, and the fields are public (though we could
+ * have implemented getters and setters instead).
  */
-
 public class UsageRecord {
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ", timezone = "UTC")
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ",
+            timezone = "UTC")
     public Instant ts;
+
     public String account;
     public long bytesUsed;
 
@@ -28,10 +31,16 @@ public class UsageRecord {
 
     @Override
     public String toString() {
-        return "Usage{" + "ts=" + ts +
-                ", account='" + account + '\'' +
-                ", bytesUsed='" + bytesUsed + '\'' +
-                '}';
+        return "Usage{"
+                + "ts="
+                + ts
+                + ", account='"
+                + account
+                + '\''
+                + ", bytesUsed='"
+                + bytesUsed
+                + '\''
+                + '}';
     }
 
     @Override

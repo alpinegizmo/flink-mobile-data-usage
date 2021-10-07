@@ -39,37 +39,40 @@ import static org.apache.flink.table.api.Expressions.$;
 
 public class TotalUsageStreamingJob {
 
-	public static final Time WINDOW_SIZE = Time.of(30, TimeUnit.DAYS);
+    public static final Time WINDOW_SIZE = Time.of(30, TimeUnit.DAYS);
 
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
 
-		final ParameterTool params = ParameterTool.fromArgs(args);
-		String topic = params.get("topic", "input");
-		String brokers = params.get("bootstrap.servers", "localhost:9092");
+        final ParameterTool params = ParameterTool.fromArgs(args);
+        String topic = params.get("topic", "input");
+        String brokers = params.get("bootstrap.servers", "localhost:9092");
 
-		final Configuration flinkConfig = new Configuration();
-		final StreamExecutionEnvironment env =
-				StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
-		env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
+        final Configuration flinkConfig = new Configuration();
+        final StreamExecutionEnvironment env =
+                StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
+        env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
 
-		StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+        StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
 
-		KafkaSource<UsageRecord> source = KafkaSource.<UsageRecord>builder()
-				.setBootstrapServers(brokers)
-				.setTopics(topic)
-				.setStartingOffsets(OffsetsInitializer.earliest())
-				.setValueOnlyDeserializer(new UsageRecordDeserializationSchema())
-				.build();
+        KafkaSource<UsageRecord> source =
+                KafkaSource.<UsageRecord>builder()
+                        .setBootstrapServers(brokers)
+                        .setTopics(topic)
+                        .setStartingOffsets(OffsetsInitializer.earliest())
+                        .setValueOnlyDeserializer(new UsageRecordDeserializationSchema())
+                        .build();
 
-		DataStream<UsageRecord> records = env
-				.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+        DataStream<UsageRecord> records =
+                env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
 
-		Table results = tEnv.fromDataStream(records)
-				.groupBy($("account"))
-				.select($("account"),
-						$("bytesUsed").sum().as("totalUsage"),
-						$("ts").max().as("asOf"));
+        Table results =
+                tEnv.fromDataStream(records)
+                        .groupBy($("account"))
+                        .select(
+                                $("account"),
+                                $("bytesUsed").sum().as("totalUsage"),
+                                $("ts").max().as("asOf"));
 
-		results.execute().print();
-	}
+        results.execute().print();
+    }
 }

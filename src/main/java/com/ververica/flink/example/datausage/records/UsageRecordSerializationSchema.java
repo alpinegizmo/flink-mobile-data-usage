@@ -10,11 +10,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class UsageRecordSerializationSchema implements SerializationSchema<UsageRecord> {
 
-    private static final ObjectMapper objectMapper = JsonMapper
-            .builder()
-            .build()
-            .registerModule(new JavaTimeModule())
-            .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+    private static final ObjectMapper objectMapper =
+            JsonMapper.builder()
+                    .build()
+                    .registerModule(new JavaTimeModule())
+                    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
     public UsageRecordSerializationSchema() {}
 
