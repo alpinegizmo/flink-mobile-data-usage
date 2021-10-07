@@ -2,7 +2,6 @@ package com.ververica.flink.example.datausage;
 
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.base.DeliveryGuarantee;
-import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 
@@ -31,13 +30,9 @@ public class KafkaProducerJob {
                 KafkaSink.<UsageRecord>builder()
                         .setBootstrapServers(brokers)
                         .setKafkaProducerConfig(kafkaProps)
-                        .setRecordSerializer(
-                                KafkaRecordSerializationSchema.builder()
-                                        .setTopic(topic)
-                                        .setValueSerializationSchema(
-                                                new UsageRecordSerializationSchema())
-                                        .build())
+                        .setRecordSerializer(new UsageRecordSerializationSchema(topic))
                         .setDeliverGuarantee(DeliveryGuarantee.EXACTLY_ONCE)
+                        .setTransactionalIdPrefix("usage-record-producer")
                         .build();
 
         env.addSource(new UsageRecordGenerator()).sinkTo(sink);

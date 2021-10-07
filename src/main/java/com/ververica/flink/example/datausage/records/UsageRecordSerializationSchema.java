@@ -1,15 +1,17 @@
 package com.ververica.flink.example.datausage.records;
 
-import org.apache.flink.api.common.serialization.SerializationSchema;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
-public class UsageRecordSerializationSchema implements SerializationSchema<UsageRecord> {
+public class UsageRecordSerializationSchema implements KafkaRecordSerializationSchema<UsageRecord> {
 
+    private String topic;
     private static final ObjectMapper objectMapper =
             JsonMapper.builder()
                     .build()
@@ -18,10 +20,21 @@ public class UsageRecordSerializationSchema implements SerializationSchema<Usage
 
     public UsageRecordSerializationSchema() {}
 
+    public UsageRecordSerializationSchema(String topic) {
+        this.topic = topic;
+    }
+
     @Override
-    public byte[] serialize(UsageRecord element) {
+    public ProducerRecord<byte[], byte[]> serialize(
+            UsageRecord element, KafkaSinkContext context, Long timestamp) {
+
         try {
-            return objectMapper.writeValueAsBytes(element);
+            return new ProducerRecord<>(
+                    topic,
+                    null,
+                    element.ts.toEpochMilli(),
+                    null,
+                    objectMapper.writeValueAsBytes(element));
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Could not serialize record: " + element, e);
         }
