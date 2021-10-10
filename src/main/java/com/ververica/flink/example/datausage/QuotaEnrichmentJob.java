@@ -34,7 +34,7 @@ public class QuotaEnrichmentJob {
         final Configuration flinkConfig = new Configuration();
         final StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
-        env.setParallelism(2);
+        env.setParallelism(4);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
 

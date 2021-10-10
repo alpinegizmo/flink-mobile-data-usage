@@ -25,7 +25,7 @@ public class UsageAlertingProcessFunctionJob {
         final Configuration flinkConfig = new Configuration();
         final StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
-        env.setParallelism(2);
+        env.setParallelism(4);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
 
@@ -74,8 +74,7 @@ public class UsageAlertingProcessFunctionJob {
                                 "  EXTRACT(YEAR from usage.ts) AS billingYear,",
                                 "  EXTRACT(MONTH from usage.ts) AS billingMonth",
                                 "FROM usage JOIN account FOR SYSTEM_TIME AS OF usage.ts",
-                                "ON usage.account = account.id",
-                                "ORDER BY usage.ts"));
+                                "ON usage.account = account.id"));
 
         DataStream<EnrichedUsageRecord> enrichedStream =
                 tEnv.toDataStream(enrichedRecords, EnrichedUsageRecord.class);

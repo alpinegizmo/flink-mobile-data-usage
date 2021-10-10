@@ -2,24 +2,28 @@ package com.ververica.flink.example.datausage.sources;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
-import org.apache.flink.streaming.api.functions.source.SourceFunction;
+import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.types.Row;
 
+import com.ververica.flink.example.datausage.records.UsageRecord;
+
 import java.time.Instant;
 
-import static com.ververica.flink.example.datausage.sources.UsageRecordGenerator.accounts;
-
-public class AccountUpdateGenerator implements SourceFunction<Row> {
+public class AccountUpdateGenerator extends RichParallelSourceFunction<Row> {
     private volatile boolean running = true;
 
     @Override
     public void run(SourceContext<Row> ctx) throws Exception {
-        ctx.collect(
-                Row.of(accounts.get(0), 5_000_000_000L, Instant.parse("2021-01-01T00:00:00.000Z")));
+        int subtask = getRuntimeContext().getIndexOfThisSubtask();
 
-        ctx.collect(
-                Row.of(accounts.get(1), 5_000_000_000L, Instant.parse("2021-01-01T00:00:00.000Z")));
+        for (int i = 0; i < UsageRecordGenerator.NUMBER_OF_ACCOUNTS_PER_INSTANCE; i++) {
+            ctx.collect(
+                    Row.of(
+                            UsageRecord.accountForSubtaskAndIndex(subtask, i),
+                            10_000_000_000L,
+                            Instant.parse("2021-01-01T00:00:00.000Z")));
+        }
 
         ctx.emitWatermark(Watermark.MAX_WATERMARK);
 

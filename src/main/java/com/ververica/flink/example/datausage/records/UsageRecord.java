@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.Instant;
 import java.util.Objects;
 
+import static com.ververica.flink.example.datausage.sources.UsageRecordGenerator.NUMBER_OF_ACCOUNTS_PER_INSTANCE;
+
 /**
  * This class is set up as a Flink POJO so that it can be serialized by Flink's PojoSerializer.
  * That's why there is an empty, default constructor, and the fields are public (though we could
@@ -58,5 +60,9 @@ public class UsageRecord {
     @Override
     public int hashCode() {
         return Objects.hash(ts, account, bytesUsed);
+    }
+
+    public static String accountForSubtaskAndIndex(int subtask, int index) {
+        return String.format("%06d", (NUMBER_OF_ACCOUNTS_PER_INSTANCE * subtask) + index);
     }
 }
