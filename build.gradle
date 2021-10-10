@@ -28,7 +28,7 @@ description = "Demo for Flink Forward Global 2021"
 
 group = 'com.ververica'
 version = '0.2'
-mainClassName = 'com.ververica.flink.example.datausage.TotalUsageStreamingJob' // default class to run!
+mainClassName = 'com.ververica.flink.example.datausage.UsageAlertingProcessFunctionJob' // default job to run
 
 ext {
     javaVersion = '1.8'
