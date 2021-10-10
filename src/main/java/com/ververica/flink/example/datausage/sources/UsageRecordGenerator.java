@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class UsageRecordGenerator implements ParallelSourceFunction<UsageRecord> {
 
-    private static final List<String> accounts = Arrays.asList("0612345678", "0176554423");
+    public static final List<String> accounts = Arrays.asList("0612345678", "0176554423");
 
     public static final Time WINDOW_SIZE = Time.of(30, TimeUnit.DAYS);
     public static final int NUMBER_OF_ACCOUNTS = accounts.size();

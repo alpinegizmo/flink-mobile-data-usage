@@ -17,6 +17,7 @@ public class KafkaProducerJob {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableCheckpointing(5000L);
+        env.setParallelism(2);
 
         final ParameterTool params = ParameterTool.fromArgs(args);
         String topic = params.get("topic", "input");
