@@ -62,8 +62,8 @@ public class UsageAlertingSQLJob {
                                 "  usage.bytesUsed AS bytesUsed,",
                                 "  account.quota AS quota,",
                                 "  usage.ts AS ts,",
-                                "  CAST(EXTRACT(YEAR from usage.ts) AS STRING) || '-' ||",
-                                "    CAST(EXTRACT(MONTH from usage.ts) AS STRING) AS billingCycle",
+                                "  EXTRACT(YEAR from usage.ts) AS billingYear,",
+                                "  EXTRACT(MONTH from usage.ts) AS billingMonth",
                                 "FROM usage JOIN account FOR SYSTEM_TIME AS OF usage.ts",
                                 "ON usage.account = account.id",
                                 "ORDER BY usage.ts"));
@@ -73,9 +73,9 @@ public class UsageAlertingSQLJob {
         tEnv.sqlQuery(
                         String.join(
                                 "\n",
-                                "SELECT account, MAX(ts), billingCycle, SUM(bytesUsed), quota",
+                                "SELECT account, MAX(ts), billingYear, billingMonth, SUM(bytesUsed), quota",
                                 "FROM enrichedRecords",
-                                "GROUP BY account, quota, billingCycle",
+                                "GROUP BY account, billingYear, billingMonth, quota",
                                 "HAVING sum(bytesUsed) > 0.9 * quota"))
                 .execute()
                 .print();
