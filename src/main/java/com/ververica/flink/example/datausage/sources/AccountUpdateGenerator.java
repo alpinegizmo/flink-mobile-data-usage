@@ -10,17 +10,6 @@ import java.time.Instant;
 
 import static com.ververica.flink.example.datausage.sources.UsageRecordGenerator.accounts;
 
-//                        Row.ofKind(
-//                                RowKind.UPDATE_BEFORE,
-//                                accounts.get(0),
-//                                10_000_000_000L,
-//                                Instant.parse("2021-01-01T00:00:00.000Z")),
-//                                Row.ofKind(
-//                                RowKind.UPDATE_AFTER,
-//                                accounts.get(0),
-//                                100_000_000_000L,
-//                                Instant.parse("2021-11-01T00:00:00.000Z")));
-
 public class AccountUpdateGenerator implements SourceFunction<Row> {
     private volatile boolean running = true;
 

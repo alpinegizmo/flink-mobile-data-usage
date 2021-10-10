@@ -24,8 +24,7 @@ public class KafkaProducerJob {
         String brokers = params.get("bootstrap.servers", "localhost:9092");
 
         Properties kafkaProps = new Properties();
-        // in production, use a much longer timeout than this
-        kafkaProps.put("transaction.timeout.ms", 600000);
+        kafkaProps.put("transaction.timeout.ms", 600000); // in production, use a longer timeout
 
         KafkaSink<UsageRecord> sink =
                 KafkaSink.<UsageRecord>builder()
