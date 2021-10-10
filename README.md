@@ -15,7 +15,7 @@ will start up Kafka.
 Running `KafkaProducerJob` will populate an _input_ topic with UsageRecords.
 You can run this job in your IDE.
 
-## TotalUsageBatchJob and TotalUsageStreamingJob
+## The other jobs
 
-Two flavors of the same application, one for BATCH and one for STREAMING.
-While these are running the Flink Web UI is available at http://localhost:8081.
+While `KafkaProducerJob` is running, you can run any of the other jobs.
+
