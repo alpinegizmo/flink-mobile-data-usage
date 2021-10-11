@@ -13,13 +13,13 @@ up a Kafka cluster:
 docker-compose up -d
 ```
 
-Running `KafkaProducerJob` will populate an _input_ topic with UsageRecords.
-You can run this job in your IDE, after which you can run any of the other
-applications (all of which expect to read from Kafka).
+Running `KafkaProducerJob` in your IDE will populate an _input_ topic with UsageRecords.
+After having run this you can run any of the other applications in this project
+(all of which expect to read from Kafka).
 
 ### UsageAlertingProcessFunctionJob
 
-While this job is running you can use Flink's web UI at http://localhost:8081.
+While this job is running in the IDE you can use Flink's web UI at http://localhost:8081.
 
 ### Setting up a Flink cluster
 
@@ -32,6 +32,13 @@ ls -la bin/
 ```
 
 Then browse to http://localhost:8081.
+
+To see the cluster run the streaming WordCount example:
+
+```bash
+./bin/flink run examples/streaming/WordCount.jar
+tail log/flink-*-taskexecutor-*.out
+```
 
 ### Running this project in a cluster
 
