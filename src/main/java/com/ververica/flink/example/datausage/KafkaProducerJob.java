@@ -37,6 +37,6 @@ public class KafkaProducerJob {
 
         env.addSource(new UsageRecordGenerator()).sinkTo(sink);
 
-        env.execute();
+        env.execute("KafkaProducerJob");
     }
 }

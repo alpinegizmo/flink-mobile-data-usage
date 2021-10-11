@@ -79,6 +79,6 @@ public class UsageAlertingSQLJob {
                 .execute()
                 .print();
 
-        env.execute();
+        env.execute("UsageAlertingSQLJob");
     }
 }

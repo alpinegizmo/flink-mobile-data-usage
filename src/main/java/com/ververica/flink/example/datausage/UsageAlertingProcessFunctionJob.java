@@ -5,6 +5,7 @@ import org.apache.flink.api.common.state.ReducingState;
 import org.apache.flink.api.common.state.ReducingStateDescriptor;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.api.scala.typeutils.Types;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -22,9 +23,16 @@ import com.ververica.flink.example.datausage.sources.AccountUpdateGenerator;
 public class UsageAlertingProcessFunctionJob {
     public static void main(String[] args) throws Exception {
 
-        final Configuration flinkConfig = new Configuration();
-        final StreamExecutionEnvironment env =
-                StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
+        final ParameterTool params = ParameterTool.fromArgs(args);
+        Boolean webui = params.getBoolean("webui", true);
+        StreamExecutionEnvironment env;
+
+        if (webui) {
+            final Configuration flinkConfig = new Configuration();
+            env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
+        } else {
+            env = StreamExecutionEnvironment.getExecutionEnvironment();
+        }
         env.setParallelism(4);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
@@ -84,7 +92,7 @@ public class UsageAlertingProcessFunctionJob {
                 .process(new UsageAlertingFunction())
                 .print();
 
-        env.execute();
+        env.execute("UsageAlertingProcessFunctionJob");
     }
 
     private static class UsageAlertingFunction
