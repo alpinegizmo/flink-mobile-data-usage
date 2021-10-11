@@ -2,7 +2,7 @@
 
 ## Getting Started
 
-Import this repo into an IDE, such as IntelliJ, as a Gradle project.
+Import this repo into an IDE, such as IntelliJ, as a Maven project.
 
 ### KafkaProducerJob
 
@@ -14,8 +14,19 @@ docker-compose up -d
 ```
 
 Running `KafkaProducerJob` in your IDE will populate an _input_ topic with UsageRecords.
-After having run this you can run any of the other applications in this project
-(all of which expect to read from Kafka).
+
+_To run the jobs in this project in IntelliJ, choose the option
+"Include dependencies with Provided scope" in your Run Configuration._
+
+After having run the `KafkaProducerJob` you can run any of the other applications
+in this project (all of which expect to read from Kafka).
+
+To watch what's happening in Kafka (using a local installation of Kafka, or
+from inside the container):
+
+```bash
+./kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic input --property print.timestamp=true
+```
 
 ### UsageAlertingProcessFunctionJob
 
@@ -49,11 +60,11 @@ is set to 8.
 Then with `flink-1.14.0/bin` in your PATH:
 
 ```bash
-./gradlew build
+mvn clean package
 start-cluster.sh
-flink run -d build/libs/flink-mobile-data-usage-0.2-all.jar
+flink run -d target/flink-mobile-data-usage-1.0.jar
 flink run -d -c com.ververica.flink.example.datausage.UsageAlertingProcessFunctionJob \
-  build/libs/flink-mobile-data-usage-0.2-all.jar --webui false
+  target/flink-mobile-data-usage-1.0.jar --webui false
 ```
 
 ## How to create a new maven project for your own Flink application

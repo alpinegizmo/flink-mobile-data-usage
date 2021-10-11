@@ -21,6 +21,10 @@ bin/
 build/
 **/.gradletasknamecache
 
+# maven build files
+dependency-reduced-pom.xml
+target/
+
 # IntelliJ
 .idea
 
