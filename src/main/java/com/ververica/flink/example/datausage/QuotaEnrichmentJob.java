@@ -73,7 +73,7 @@ public class QuotaEnrichmentJob {
 
 
         /******************************************************************************************
-         * Creating the schema a table and a temporary view for the account updates
+         * Setting up a table for account updates
          ******************************************************************************************/
 
         Schema accountUpdateSchema =
