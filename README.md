@@ -54,8 +54,12 @@ tail log/flink-*-taskexecutor-*.out
 ### Running this project in a cluster
 
 If you have already started a cluster, stop it and reconfigure Flink to have more resources
-by modifing `flink-1.14.0/conf/flink-conf.yaml` so that `taskmanager.numberOfTaskSlots`
-is set to 8.
+by modifing `flink-1.14.0/conf/flink-conf.yaml` so that
+
+```yaml
+taskmanager.memory.process.size: 3072m
+taskmanager.numberOfTaskSlots: 8
+```
 
 Then with `flink-1.14.0/bin` in your PATH:
 
