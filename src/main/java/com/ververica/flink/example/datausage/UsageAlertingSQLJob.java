@@ -13,12 +13,21 @@ import com.ververica.flink.example.datausage.sources.AccountUpdateGenerator;
 public class UsageAlertingSQLJob {
     public static void main(String[] args) throws Exception {
 
+        /******************************************************************************************
+         * Setting up the environment
+         ******************************************************************************************/
+
         final Configuration flinkConfig = new Configuration();
         final StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
         env.setParallelism(4);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+
+
+        /******************************************************************************************
+         * Creating a table containing the usage data with the Kafka connector
+         ******************************************************************************************/
 
         tEnv.executeSql(
                 String.join(
@@ -36,9 +45,19 @@ public class UsageAlertingSQLJob {
                         "  'format' = 'json'",
                         ")"));
 
+
+        /******************************************************************************************
+         * Creating a data stream for the account updates from the generator
+         ******************************************************************************************/
+
         DataStream<Row> accountUpdateStream =
                 env.addSource(new AccountUpdateGenerator())
                         .returns(AccountUpdateGenerator.typeProduced());
+
+
+        /******************************************************************************************
+         * Setting up a schema for the account updates
+         ******************************************************************************************/
 
         Schema accountUpdateSchema =
                 Schema.newBuilder()
@@ -49,9 +68,19 @@ public class UsageAlertingSQLJob {
                         .primaryKey("id")
                         .build();
 
+
+        /******************************************************************************************
+         * Turning the account updates data stream into a table and creating a temporary view
+         ******************************************************************************************/
+
         Table accountUpdates = tEnv.fromChangelogStream(accountUpdateStream, accountUpdateSchema);
 
         tEnv.createTemporaryView("account", accountUpdates);
+
+
+        /******************************************************************************************
+         * Creating a table for the enriched records
+         ******************************************************************************************/
 
         Table enrichedRecords =
                 tEnv.sqlQuery(
@@ -69,6 +98,11 @@ public class UsageAlertingSQLJob {
 
         tEnv.createTemporaryView("enrichedRecords", enrichedRecords);
 
+
+        /******************************************************************************************
+         * Creating, executing and printing a join to get the users exceeding the quota
+         ******************************************************************************************/
+
         tEnv.sqlQuery(
                         String.join(
                                 "\n",
@@ -78,6 +112,11 @@ public class UsageAlertingSQLJob {
                                 "HAVING sum(bytesUsed) > 0.9 * quota"))
                 .execute()
                 .print();
+
+
+        /******************************************************************************************
+         * Executing the job
+         ******************************************************************************************/
 
         env.execute("UsageAlertingSQLJob");
     }

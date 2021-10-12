@@ -38,9 +38,18 @@ public class TotalUsageStreamingJob {
 
     public static void main(String[] args) throws Exception {
 
+        /******************************************************************************************
+         * Getting the topic and the servers
+         ******************************************************************************************/
+
         final ParameterTool params = ParameterTool.fromArgs(args);
         String topic = params.get("topic", "input");
         String brokers = params.get("bootstrap.servers", "localhost:9092");
+
+
+        /******************************************************************************************
+         * Getting the environment
+         ******************************************************************************************/
 
         final Configuration flinkConfig = new Configuration();
         final StreamExecutionEnvironment env =
@@ -48,6 +57,11 @@ public class TotalUsageStreamingJob {
         env.setRuntimeMode(RuntimeExecutionMode.STREAMING);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+
+
+        /******************************************************************************************
+         * Creating the unbounded Kafka source
+         ******************************************************************************************/
 
         KafkaSource<UsageRecord> source =
                 KafkaSource.<UsageRecord>builder()
@@ -57,8 +71,18 @@ public class TotalUsageStreamingJob {
                         .setValueOnlyDeserializer(new UsageRecordDeserializationSchema())
                         .build();
 
+
+        /******************************************************************************************
+         * Creating the data source
+         ******************************************************************************************/
+
         DataStream<UsageRecord> records =
                 env.fromSource(source, WatermarkStrategy.noWatermarks(), "Kafka Source");
+
+
+        /******************************************************************************************
+         * Creating the table for the results
+         ******************************************************************************************/
 
         Table results =
                 tEnv.fromDataStream(records)
@@ -67,6 +91,11 @@ public class TotalUsageStreamingJob {
                                 $("account"),
                                 $("bytesUsed").sum().as("totalUsage"),
                                 $("ts").max().as("asOf"));
+
+
+        /******************************************************************************************
+         * Executing and printing the results
+         ******************************************************************************************/
 
         results.execute().print();
     }
