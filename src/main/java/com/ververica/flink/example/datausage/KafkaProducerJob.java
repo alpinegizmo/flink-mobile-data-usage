@@ -17,14 +17,14 @@ public class KafkaProducerJob {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.enableCheckpointing(5000L);
+        env.setParallelism(4);
 
         final ParameterTool params = ParameterTool.fromArgs(args);
         String topic = params.get("topic", "input");
         String brokers = params.get("bootstrap.servers", "localhost:9092");
 
         Properties kafkaProps = new Properties();
-        // in production, use a much longer timeout than this
-        kafkaProps.put("transaction.timeout.ms", 600000);
+        kafkaProps.put("transaction.timeout.ms", 600000); // in production, use a longer timeout
 
         KafkaSink<UsageRecord> sink =
                 KafkaSink.<UsageRecord>builder()
@@ -37,6 +37,6 @@ public class KafkaProducerJob {
 
         env.addSource(new UsageRecordGenerator()).sinkTo(sink);
 
-        env.execute();
+        env.execute("KafkaProducerJob");
     }
 }

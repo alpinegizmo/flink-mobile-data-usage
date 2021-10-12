@@ -1,39 +1,39 @@
 package com.ververica.flink.example.datausage.sources;
 
-import org.apache.flink.streaming.api.functions.source.ParallelSourceFunction;
-import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
 
 import com.ververica.flink.example.datausage.records.UsageRecord;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
-public class UsageRecordGenerator implements ParallelSourceFunction<UsageRecord> {
+public class UsageRecordGenerator extends RichParallelSourceFunction<UsageRecord> {
 
-    private static final List<String> accounts = Arrays.asList("0612345678", "0176554423");
-
-    public static final Time WINDOW_SIZE = Time.of(30, TimeUnit.DAYS);
-    public static final int NUMBER_OF_ACCOUNTS = accounts.size();
-    public static final int EVENTS_PER_WINDOW = 1000;
-    public static final int SPEEDUP_FACTOR = 100_000;
+    public static final int NUMBER_OF_ACCOUNTS_PER_INSTANCE = 10000;
+    public static final int EVENTS_PER_DAY_PER_ACCOUNT = 4;
+    public static final int MILLISECONDS_PER_DAY = 86_400_000;
     public static final long DELTA_T =
-            WINDOW_SIZE.toMilliseconds() / NUMBER_OF_ACCOUNTS / EVENTS_PER_WINDOW;
+            MILLISECONDS_PER_DAY / (NUMBER_OF_ACCOUNTS_PER_INSTANCE * EVENTS_PER_DAY_PER_ACCOUNT);
     public static final Instant BEGINNING = Instant.parse("2021-10-01T00:00:00.00Z");
+    public static final Instant SLOWDOWN = Instant.parse("2021-10-26T17:00:00.00Z");
 
     private volatile boolean running = true;
+    private int indexOfThisSubtask;
 
     @Override
     public void run(SourceContext<UsageRecord> ctx) throws Exception {
 
-        UsageRecordIterator usageRecordIterator = new UsageRecordIterator();
+        this.indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
+        UsageRecordIterator usageRecordIterator = new UsageRecordIterator(indexOfThisSubtask);
+        long startTime = System.currentTimeMillis();
 
         while (running) {
             UsageRecord event = usageRecordIterator.next();
             ctx.collect(event);
-            Thread.sleep(DELTA_T / SPEEDUP_FACTOR);
+            // slow down once the timestamps catch up to the date of Flink Forward
+            if (event.ts.compareTo(SLOWDOWN) > 0) {
+                Thread.sleep(DELTA_T);
+            }
         }
     }
 
@@ -45,21 +45,27 @@ public class UsageRecordGenerator implements ParallelSourceFunction<UsageRecord>
     static class UsageRecordIterator {
 
         private long nextTimestamp;
-        private int nextIndex;
         private Random random;
+        private int indexOfThisSubtask;
 
-        public UsageRecordIterator() {
+        public UsageRecordIterator(int indexOfThisSubtask) {
             nextTimestamp = BEGINNING.toEpochMilli();
-            nextIndex = 0;
             random = new Random();
+            this.indexOfThisSubtask = indexOfThisSubtask;
         }
 
-        UsageRecord next() {
+        public UsageRecord next() {
             Instant ts = Instant.ofEpochMilli(nextTimestamp);
             nextTimestamp += DELTA_T;
-            String account = accounts.get(random.nextInt(NUMBER_OF_ACCOUNTS));
-            int bytesUsed = 100 * random.nextInt(50_000);
+            String account = nextAccountForInstance();
+
+            int bytesUsed = 18 * random.nextInt(10_000_000);
             return new UsageRecord(ts, account, bytesUsed);
+        }
+
+        private String nextAccountForInstance() {
+            return UsageRecord.accountForSubtaskAndIndex(
+                    indexOfThisSubtask, random.nextInt(NUMBER_OF_ACCOUNTS_PER_INSTANCE));
         }
     }
 }

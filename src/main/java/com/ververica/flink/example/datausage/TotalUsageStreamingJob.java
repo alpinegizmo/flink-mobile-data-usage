@@ -26,20 +26,15 @@ import org.apache.flink.connector.kafka.source.KafkaSource;
 import org.apache.flink.connector.kafka.source.enumerator.initializer.OffsetsInitializer;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import com.ververica.flink.example.datausage.records.UsageRecord;
 import com.ververica.flink.example.datausage.records.UsageRecordDeserializationSchema;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.apache.flink.table.api.Expressions.$;
 
 public class TotalUsageStreamingJob {
-
-    public static final Time WINDOW_SIZE = Time.of(30, TimeUnit.DAYS);
 
     public static void main(String[] args) throws Exception {
 

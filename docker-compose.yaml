@@ -20,6 +20,8 @@ version: "2.1"
 services:
   zookeeper:
     image: wurstmeister/zookeeper:3.4.6
+    ports:
+      - 2181:2181
   kafka:
     image: wurstmeister/kafka:2.12-2.5.0
     ports:
@@ -32,5 +34,5 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
       KAFKA_LISTENERS: INSIDE://0.0.0.0:9093,OUTSIDE://0.0.0.0:9092
       KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
-      KAFKA_CREATE_TOPICS: "input:2:1, output:2:1"
+      KAFKA_CREATE_TOPICS: "input:8:1"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
