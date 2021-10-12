@@ -31,12 +31,20 @@ import com.ververica.flink.example.datausage.sources.AccountUpdateGenerator;
 public class QuotaEnrichmentJob {
     public static void main(String[] args) throws Exception {
 
+        /******************************************************************************************
+         * Setting up environment
+         ******************************************************************************************/
         final Configuration flinkConfig = new Configuration();
         final StreamExecutionEnvironment env =
                 StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
         env.setParallelism(4);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+
+
+        /******************************************************************************************
+         * Create table using the kafka connector
+         ******************************************************************************************/
 
         tEnv.executeSql(
                 String.join(
@@ -54,9 +62,19 @@ public class QuotaEnrichmentJob {
                         "  'format' = 'json'",
                         ")"));
 
+
+        /******************************************************************************************
+         * Creating a data stream from the account update generator
+         ******************************************************************************************/
+
         DataStream<Row> accountUpdateStream =
                 env.addSource(new AccountUpdateGenerator())
                         .returns(AccountUpdateGenerator.typeProduced());
+
+
+        /******************************************************************************************
+         * Setting up a table for account updates
+         ******************************************************************************************/
 
         Schema accountUpdateSchema =
                 Schema.newBuilder()
@@ -66,10 +84,12 @@ public class QuotaEnrichmentJob {
                         .watermark("ts", "SOURCE_WATERMARK()")
                         .primaryKey("id")
                         .build();
-
         Table accountUpdates = tEnv.fromChangelogStream(accountUpdateStream, accountUpdateSchema);
-
         tEnv.createTemporaryView("account", accountUpdates);
+
+        /******************************************************************************************
+         * Joining the usage table with the account table
+         ******************************************************************************************/
 
         Table enrichedRecords =
                 tEnv.sqlQuery(
@@ -79,6 +99,11 @@ public class QuotaEnrichmentJob {
                                 "FROM usage JOIN account FOR SYSTEM_TIME AS OF usage.ts",
                                 "ON usage.account = account.id",
                                 "ORDER BY usage.ts"));
+
+
+        /******************************************************************************************
+         * Printing the records
+         ******************************************************************************************/
 
         enrichedRecords.execute().print();
     }

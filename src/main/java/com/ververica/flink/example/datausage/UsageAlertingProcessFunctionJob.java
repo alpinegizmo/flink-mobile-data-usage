@@ -23,9 +23,18 @@ import com.ververica.flink.example.datausage.sources.AccountUpdateGenerator;
 public class UsageAlertingProcessFunctionJob {
     public static void main(String[] args) throws Exception {
 
+        /******************************************************************************************
+         * Getting the parameters
+         ******************************************************************************************/
+
         final ParameterTool params = ParameterTool.fromArgs(args);
         Boolean webui = params.getBoolean("webui", true);
         StreamExecutionEnvironment env;
+
+
+        /******************************************************************************************
+         * Setting up the environment
+         ******************************************************************************************/
 
         if (webui) {
             final Configuration flinkConfig = new Configuration();
@@ -36,6 +45,11 @@ public class UsageAlertingProcessFunctionJob {
         env.setParallelism(4);
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
+
+
+        /******************************************************************************************
+         * Creating the table containing the usage records using the Kafka connector
+         ******************************************************************************************/
 
         tEnv.executeSql(
                 String.join(
@@ -53,9 +67,19 @@ public class UsageAlertingProcessFunctionJob {
                         "  'format' = 'json'",
                         ")"));
 
+
+        /******************************************************************************************
+         * Creating a data stream
+         ******************************************************************************************/
+
         DataStream<Row> accountUpdateStream =
                 env.addSource(new AccountUpdateGenerator())
                         .returns(AccountUpdateGenerator.typeProduced());
+
+
+        /******************************************************************************************
+         * Setting up the schema for the account updates
+         ******************************************************************************************/
 
         Schema accountUpdateSchema =
                 Schema.newBuilder()
@@ -66,9 +90,19 @@ public class UsageAlertingProcessFunctionJob {
                         .primaryKey("id")
                         .build();
 
+
+        /******************************************************************************************
+         * Creating a table and a temporary view for the account updates
+         ******************************************************************************************/
+
         Table accountUpdates = tEnv.fromChangelogStream(accountUpdateStream, accountUpdateSchema);
 
         tEnv.createTemporaryView("account", accountUpdates);
+
+
+        /******************************************************************************************
+         * Enriching the records into a table
+         ******************************************************************************************/
 
         Table enrichedRecords =
                 tEnv.sqlQuery(
@@ -84,13 +118,28 @@ public class UsageAlertingProcessFunctionJob {
                                 "FROM usage JOIN account FOR SYSTEM_TIME AS OF usage.ts",
                                 "ON usage.account = account.id"));
 
+
+        /******************************************************************************************
+         * Turning the table into a data stream
+         ******************************************************************************************/
+
         DataStream<EnrichedUsageRecord> enrichedStream =
                 tEnv.toDataStream(enrichedRecords, EnrichedUsageRecord.class);
+
+
+        /******************************************************************************************
+         * Applying the process function to the data stream
+         ******************************************************************************************/
 
         enrichedStream
                 .keyBy(e -> e.keyByAccountYearMonthQuota())
                 .process(new UsageAlertingFunction())
                 .print();
+
+
+        /******************************************************************************************
+         * Executing the job
+         ******************************************************************************************/
 
         env.execute("UsageAlertingProcessFunctionJob");
     }
@@ -103,6 +152,10 @@ public class UsageAlertingProcessFunctionJob {
 
         @Override
         public void open(Configuration parameters) throws Exception {
+
+            /******************************************************************************************
+             * Setting up a rolling and a value state
+             ******************************************************************************************/
 
             final ReducingStateDescriptor<Long> rollingUsageStateDesc =
                     new ReducingStateDescriptor<>("rolling-sum", new Sum(), Types.LONG());
@@ -119,8 +172,17 @@ public class UsageAlertingProcessFunctionJob {
         public void processElement(EnrichedUsageRecord record, Context ctx, Collector<String> out)
                 throws Exception {
 
+            /******************************************************************************************
+             * Summing up the usage
+             ******************************************************************************************/
+
             rollingUsage.add(record.bytesUsed);
             long total = rollingUsage.get();
+
+
+            /******************************************************************************************
+             * Alerting the user in case of getting close to exceeded quota
+             ******************************************************************************************/
 
             if (alerted.value() == null && total > (0.9 * record.quota)) {
                 out.collect(
