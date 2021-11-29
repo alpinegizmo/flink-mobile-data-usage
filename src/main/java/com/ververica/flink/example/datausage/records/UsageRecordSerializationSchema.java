@@ -29,6 +29,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 
 public class UsageRecordSerializationSchema implements KafkaRecordSerializationSchema<UsageRecord> {
 
+    private static final long serialVersionUID = 1L;
+
     private String topic;
     private static final ObjectMapper objectMapper =
             JsonMapper.builder()

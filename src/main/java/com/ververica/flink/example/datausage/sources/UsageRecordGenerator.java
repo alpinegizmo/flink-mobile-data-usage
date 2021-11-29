@@ -27,6 +27,8 @@ import java.util.Random;
 
 public class UsageRecordGenerator extends RichParallelSourceFunction<UsageRecord> {
 
+    private static final long serialVersionUID = 1L;
+
     public static final int NUMBER_OF_ACCOUNTS_PER_INSTANCE = 10000;
     public static final int EVENTS_PER_DAY_PER_ACCOUNT = 4;
     public static final int MILLISECONDS_PER_DAY = 86_400_000;
@@ -43,7 +45,6 @@ public class UsageRecordGenerator extends RichParallelSourceFunction<UsageRecord
 
         this.indexOfThisSubtask = getRuntimeContext().getIndexOfThisSubtask();
         UsageRecordIterator usageRecordIterator = new UsageRecordIterator(indexOfThisSubtask);
-        long startTime = System.currentTimeMillis();
 
         while (running) {
             UsageRecord event = usageRecordIterator.next();

@@ -165,6 +165,8 @@ public class UsageAlertingProcessFunctionJob {
     private static class UsageAlertingFunction
             extends KeyedProcessFunction<String, EnrichedUsageRecord, String> {
 
+        private static final long serialVersionUID = 1L;
+
         ReducingState<Long> rollingUsage;
         ValueState<Boolean> alerted;
 

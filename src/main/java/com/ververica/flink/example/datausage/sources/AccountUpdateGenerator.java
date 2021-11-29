@@ -29,6 +29,9 @@ import com.ververica.flink.example.datausage.records.UsageRecord;
 import java.time.Instant;
 
 public class AccountUpdateGenerator extends RichParallelSourceFunction<Row> {
+
+    private static final long serialVersionUID = 1L;
+
     private volatile boolean running = true;
 
     @Override
