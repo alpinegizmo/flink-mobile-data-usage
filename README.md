@@ -19,6 +19,8 @@ under the License.
 
 # Flink Mobile Data Usage
 
+This is the code for a talk @joemoe and I gave at Flink Forward Global 2021: [Introduction to Flink in 30 minutes](https://www.youtube.com/watch?v=RCP9-HdId9w).
+
 ## Getting Started
 
 Import this repo into an IDE, such as IntelliJ, as a Maven project.
