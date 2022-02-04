@@ -56,9 +56,9 @@ While this job is running in the IDE you can use Flink's web UI at http://localh
 ### Setting up a Flink cluster
 
 ```bash
-curl -O https://dlcdn.apache.org/flink/flink-1.14.0/flink-1.14.0-bin-scala_2.12.tgz
+curl -O https://dlcdn.apache.org/flink/flink-1.14.3/flink-1.14.3-bin-scala_2.12.tgz
 tar -xzf flink-*.tgz
-cd flink-1.14.0
+cd flink-1.14.3
 ls -la bin/
 ./bin/start-cluster.sh
 ```
@@ -75,14 +75,14 @@ tail log/flink-*-taskexecutor-*.out
 ### Running this project in a cluster
 
 If you have already started a cluster, stop it and reconfigure Flink to have more resources
-by modifing `flink-1.14.0/conf/flink-conf.yaml` so that
+by modifing `flink-1.14.3/conf/flink-conf.yaml` so that
 
 ```yaml
 taskmanager.memory.process.size: 3072m
 taskmanager.numberOfTaskSlots: 8
 ```
 
-Then with `flink-1.14.0/bin` in your PATH:
+Then with `flink-1.14.3/bin` in your PATH:
 
 ```bash
 mvn clean package
@@ -95,7 +95,7 @@ flink run -d -c com.ververica.flink.example.datausage.UsageAlertingProcessFuncti
 ## How to create a new maven project for your own Flink application
 
 ```bash
-curl https://flink.apache.org/q/quickstart.sh | bash -s 1.14.0
+curl https://flink.apache.org/q/quickstart.sh | bash -s 1.14.3
 ```
 
 See [Project Configuration](https://nightlies.apache.org/flink/flink-docs-stable/docs/dev/datastream/project-configuration) in the Flink docs for more information.
