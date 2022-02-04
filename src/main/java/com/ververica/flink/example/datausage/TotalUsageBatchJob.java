@@ -38,7 +38,7 @@ import static org.apache.flink.table.api.Expressions.$;
 
 public class TotalUsageBatchJob {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
 
         /******************************************************************************************
          * Getting the topic and the servers
