@@ -18,8 +18,10 @@
 
 package com.ververica.flink.example.datausage;
 
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.sink.DiscardingSink;
 import org.apache.flink.table.api.Schema;
 import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
@@ -32,15 +34,21 @@ public class BenchmarkJob {
     public static void main(String[] args) throws Exception {
 
         /******************************************************************************************
-         * Setting up environment
+         * Set up environment
          ******************************************************************************************/
+
+//        final Configuration flinkConfig = new Configuration();
+//        final StreamExecutionEnvironment env =
+//                StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(flinkConfig);
+//        env.setParallelism(4);
+
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         StreamTableEnvironment tEnv = StreamTableEnvironment.create(env);
 
 
         /******************************************************************************************
-         * Setting up a table for usage records
+         * Set up a table for usage records
          ******************************************************************************************/
 
         DataStream<Row> usageRecordStream =
@@ -52,7 +60,7 @@ public class BenchmarkJob {
                         .column("account", "STRING NOT NULL")
                         .column("bytesUsed", "BIGINT")
                         .column("ts", "TIMESTAMP_LTZ(3)")
-                        .watermark("ts", "ts")
+                        .watermark("ts", "ts - INTERVAL '10' SECOND")
                         .primaryKey("account")
                         .build();
 
@@ -61,7 +69,7 @@ public class BenchmarkJob {
 
 
         /******************************************************************************************
-         * Setting up a table for account updates
+         * Set up a table for account updates
          ******************************************************************************************/
 
         DataStream<Row> accountUpdateStream =
@@ -80,7 +88,7 @@ public class BenchmarkJob {
         tEnv.createTemporaryView("account", accountUpdates);
 
         /******************************************************************************************
-         * Joining the usage table with the account table
+         * Join the usage table with the account table
          ******************************************************************************************/
 
         Table enrichedRecords =
@@ -91,22 +99,14 @@ public class BenchmarkJob {
                                 "FROM usage JOIN account FOR SYSTEM_TIME AS OF usage.ts",
                                 "ON usage.account = account.id"));
 
-        tEnv.createTemporaryView("enrichedRecords", enrichedRecords);
 
         /******************************************************************************************
          * Create and discard the results
          ******************************************************************************************/
 
-        tEnv.executeSql(String.join(
-                "\n",
-                "CREATE TABLE bottomlessPit (",
-                "  account STRING,",
-                "  bytesUsed BIGINT,",
-                "  quota BIGINT,",
-                "  ts TIMESTAMP_LTZ(3)",
-                ") WITH ('connector' = 'blackhole')"));
+        DataStream<Row> results = tEnv.toDataStream(enrichedRecords);
 
-        tEnv.from("enrichedRecords").executeInsert("bottomlessPit");
+        results.addSink(new DiscardingSink<>());
 
         env.execute();
     }

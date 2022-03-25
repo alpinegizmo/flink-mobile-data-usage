@@ -32,12 +32,7 @@ public class UsageRecordGenerator extends RichParallelSourceFunction<Row> {
 
     private static final long serialVersionUID = 1L;
 
-    public static final int NUMBER_OF_ACCOUNTS_PER_INSTANCE = 10000;
-    public static final int EVENTS_PER_DAY_PER_ACCOUNT = 4;
-    public static final int MILLISECONDS_PER_DAY = 86_400_000;
-    public static final long DELTA_T =
-            MILLISECONDS_PER_DAY / (NUMBER_OF_ACCOUNTS_PER_INSTANCE * EVENTS_PER_DAY_PER_ACCOUNT);
-    public static final Instant BEGINNING = Instant.parse("2021-10-01T00:00:00.00Z");
+    public static final int NUMBER_OF_ACCOUNTS_PER_INSTANCE = 10;
 
     private volatile boolean running = true;
     private int indexOfThisSubtask;
@@ -63,19 +58,16 @@ public class UsageRecordGenerator extends RichParallelSourceFunction<Row> {
 
     static class UsageRecordIterator {
 
-        private long nextTimestamp;
         private Random random;
         private int indexOfThisSubtask;
 
         public UsageRecordIterator(int indexOfThisSubtask) {
-            nextTimestamp = BEGINNING.toEpochMilli();
             random = new Random();
             this.indexOfThisSubtask = indexOfThisSubtask;
         }
 
         public UsageRecord next() {
-            Instant ts = Instant.ofEpochMilli(nextTimestamp);
-            nextTimestamp += DELTA_T;
+            Instant ts = Instant.now();
             String account = nextAccountForInstance();
 
             int bytesUsed = 18 * random.nextInt(10_000_000);
